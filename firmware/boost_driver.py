@@ -14,11 +14,21 @@ class BoostDriver:
     vin_pin = Pin(34)
     VCC = 5
     boost = 0
+    zero_offset = 0
     voltage_readings = []
 
     def __init__(self):
         self.vin_adc = ADC(self.vin_pin)
         pass
+
+    def set_zero_offset(self, offset):
+        self.zero_offset = self.zero_offset + offset
+
+    def reset_zero_offset(self):
+        self.zero_offset = 0
+
+    def get_zero_offset(self):
+        return self.zero_offset
 
     def get_voltage(self):
         return self.vin_adc.read_uv() / 1000000  # Convert to Volts
@@ -33,7 +43,7 @@ class BoostDriver:
             self.voltage_readings = []
 
             sensor_vout = vin_to_sensor_vout(avg_vin)
-            pressure = vout_to_psi(sensor_vout, self.VCC)
+            pressure = vout_to_psi(sensor_vout, self.VCC) + self.zero_offset
 
             return pressure, avg_vin
 
