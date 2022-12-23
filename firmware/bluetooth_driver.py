@@ -1,7 +1,5 @@
 import bluetooth
 import binascii
-import random
-import time
 from ble_advertising import advertising_payload
 
 from micropython import const
@@ -13,10 +11,18 @@ def uuid2bytes(uuid):
     return bytes(reversed(tmp))
 
 
+def pressure_to_bytes(pressure):
+    return str.encode("{} psi".format(pressure))
+
+
+def voltage_to_bytes(voltage):
+    return str.encode("{}V".format(voltage))
+
+
 _FLAG_DESC_READ = const(1)
 _FLAG_DESC_WRITE = const(2)
-_IRQ_CENTRAL_CONNECT                 = const(1 << 0)
-_IRQ_CENTRAL_DISCONNECT              = const(1 << 1)
+_IRQ_CENTRAL_CONNECT = const(1 << 0)
+_IRQ_CENTRAL_DISCONNECT = const(1 << 1)
 _IRQ_GATTS_WRITE = const(3)
 
 # Sensor control values
@@ -110,10 +116,10 @@ class BluetoothDriver:
                 self._reset_max_pressure_callback()
 
     def init_names(self):
-        self._ble.gatts_write(self._pressure_desc_handle, "Pressure")
-        self._ble.gatts_write(self._max_pressure_desc_handle, "Max pressure")
-        self._ble.gatts_write(self._sensor_voltage_desc_handle, "Sensor voltage")
-        self._ble.gatts_write(self._sensor_control_desc_handle, "General purpose sensor control")
+        self._ble.gatts_write(self._pressure_desc_handle, str.encode("Pressure"))
+        self._ble.gatts_write(self._max_pressure_desc_handle, str.encode("Max pressure"))
+        self._ble.gatts_write(self._sensor_voltage_desc_handle, str.encode("Sensor voltage"))
+        self._ble.gatts_write(self._sensor_control_desc_handle, str.encode("General purpose sensor control"))
 
     def init_characteristics(self):
         self.set_pressure(self._live_pressure)
@@ -134,7 +140,7 @@ class BluetoothDriver:
 
     def set_pressure(self, pressure, notify=True):
         self._live_pressure = pressure
-        self._ble.gatts_write(self._pressure_handle, "{} psi".format(pressure))
+        self._ble.gatts_write(self._pressure_handle, pressure_to_bytes(pressure))
         if notify:
             for conn_handle in self._connections:
                 # Notify connected centrals to issue a read.
@@ -142,7 +148,7 @@ class BluetoothDriver:
 
     def set_max_pressure(self, pressure, notify=True):
         self._max_pressure = pressure
-        self._ble.gatts_write(self._max_pressure_handle, "{} psi".format(pressure))
+        self._ble.gatts_write(self._max_pressure_handle, pressure_to_bytes(pressure))
         if notify:
             for conn_handle in self._connections:
                 # Notify connected centrals to issue a read.
@@ -150,7 +156,7 @@ class BluetoothDriver:
 
     def set_sensor_voltage(self, voltage, notify=True):
         self._sensor_voltage = voltage
-        self._ble.gatts_write(self._sensor_voltage_handle, "{}V".format(voltage))
+        self._ble.gatts_write(self._sensor_voltage_handle, voltage_to_bytes(voltage))
         if notify:
             for conn_handle in self._connections:
                 # Notify connected centrals to issue a read.
