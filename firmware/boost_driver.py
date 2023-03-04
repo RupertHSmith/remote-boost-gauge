@@ -18,7 +18,7 @@ class BoostDriver:
     voltage_readings = []
 
     def __init__(self):
-        self.vin_adc = ADC(self.vin_pin)
+        self.vin_adc = ADC(self.vin_pin, atten=ADC.ATTN_11DB)
         pass
 
     def set_zero_offset(self, offset):
